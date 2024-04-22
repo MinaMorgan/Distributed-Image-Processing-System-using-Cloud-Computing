@@ -3,9 +3,19 @@ import customtkinter as ctk
 from tkinter import Canvas, filedialog, messagebox
 from PIL import Image, ImageTk
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
-ctk.set_appearance_mode("Dark")  # Set theme to Dark - Light or System are also options
-ctk.set_default_color_theme("blue")  # Set color theme
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("blue")
+
+def plot_image(data):
+    image_array = np.array(data)
+    plt.figure()
+    plt.imshow(image_array, cmap='gray', interpolation='nearest')
+    plt.title("Result")
+    plt.axis('off')
+    plt.show()
 
 class ImageProcessor(ctk.CTk):
     def __init__(self):
@@ -14,20 +24,16 @@ class ImageProcessor(ctk.CTk):
         self.geometry("640x480")
         self.resizable(False, False)
 
-        # Load the background image
         self.load_background()
 
-        # Initialize UI components
         self.create_widgets()
 
     def load_background(self):
-        """Load and display a background image on a canvas."""
-        # Load the background image using PIL and create a PhotoImage object
-        image_path = "Background.jpg"  # Ensure this path is correct
+        # Load the background image
+        image_path = "Background.jpg"
         original_image = Image.open(image_path)
         self.background_image = ImageTk.PhotoImage(original_image)
 
-        # Create a canvas and add the background image to it
         self.canvas = Canvas(self, width=640, height=480)
         self.canvas.pack(fill="both", expand=True)
         self.canvas.create_image(0, 0, image=self.background_image, anchor="nw")
@@ -41,7 +47,7 @@ class ImageProcessor(ctk.CTk):
         self.text_label = ctk.CTkLabel(self, text="Text:")
         self.text_label.place(x=220, y=80)
         
-        # Entry widget for text input
+        # Text entry
         self.text_entry = ctk.CTkEntry(self, width=170)
         self.text_entry.place(x=250, y=80)
         
@@ -58,29 +64,28 @@ class ImageProcessor(ctk.CTk):
         self.send_request_button = ctk.CTkButton(self, text="Send Request", width=200, command=self.send_request)
         self.send_request_button.place(x=220, y=160)
         
-        # File label display to show the name of the selected file
+        # File label to show the name of the selected file
         self.image_path = ctk.StringVar()
         self.image_path.trace_add("write", self.update_file_label)
         self.file_label = ctk.CTkLabel(self, text="")
-        self.file_label.place(x=450, y=40)  # Placing it below the text entry
+        self.file_label.place(x=450, y=40)
 
     def select_image(self):
         file_types = [
-            ('Image files', '*.jpg *.jpeg *.png *.gif *.bmp'),  # Group common types
-            ('JPEG', '*.jpg;*.jpeg'),  # JPEG format
-            ('PNG', '*.png'),          # PNG format
-            ('GIF', '*.gif'),          # GIF format
-            ('BMP', '*.bmp'),          # BMP format
+            ('Image files', '*.jpg *.jpeg *.png *.gif *.bmp'),
+            ('JPEG', '*.jpg;*.jpeg'),
+            ('PNG', '*.png'),
+            ('GIF', '*.gif'),
+            ('BMP', '*.bmp'),
         ]
         
-        # Open file dialog only showing the specified file types
         filename = filedialog.askopenfilename(filetypes=file_types)
         
         if filename:
-            print("Selected file:", filename)  # Or handle the file path as needed
+            print("Selected file:", filename)
             self.image_path.set(filename)
         else:
-            self.image_path.set("")  # Clear the path if the user cancels the dialog            
+            self.image_path.set("")          
 
     def send_request(self):
         url = 'http://16.16.195.190:5000/process'
@@ -96,7 +101,9 @@ class ImageProcessor(ctk.CTk):
                 'operation': operation
             }
             response = requests.post(url, files=files, data=data)
-            print(response.json())
+            #print(response.json())
+            img=response.json()
+            plot_image(img['result'])
         except Exception as e:
             messagebox.showerror("Error", f"Failed to send request: {e}")
     

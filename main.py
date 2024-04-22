@@ -1,3 +1,4 @@
+import uvicorn
 import threading
 import queue
 import cv2
@@ -56,5 +57,4 @@ if __name__ == '__main__':
         WorkerThread(task_queue).start()
 
     if rank == 0:
-        import uvicorn
         uvicorn.run(app, host='0.0.0.0', port=5000)
