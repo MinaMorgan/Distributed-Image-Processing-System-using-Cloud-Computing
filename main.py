@@ -1,3 +1,4 @@
+from typing import List
 import uvicorn
 import threading
 import queue
@@ -40,12 +41,14 @@ class WorkerThread(threading.Thread):
         comm.send(result, dest=0)
 
 @app.post('/process')
-async def process(image: UploadFile = Form(...), text: str = Form(...), operation: str = Form(...)):
+async def process(images: List[UploadFile] = Form(...), text: str = Form(...), operation: str = Form(...)):
     if rank == 0:
-        image_path = '/home/ubuntu/Distributed-Image-Processing-System-using-Cloud-Computing/image.jpg'  # Set the appropriate path
-        with open(image_path, 'wb') as f:
-            f.write(await image.read())
-        task_queue.put((image_path, operation))
+        download_path = "/home/ubuntu/Distributed-Image-Processing-System-using-Cloud-Computing"
+        for image in images:
+            image_path = f'{download_path}/{image.filename}'  # Set the appropriate path
+            with open(image_path, 'wb') as f:
+                f.write(await image.read())
+            task_queue.put((image_path, operation))
         result = comm.recv(source=MPI.ANY_SOURCE)
         return {'result': result.tolist()}
     else:
