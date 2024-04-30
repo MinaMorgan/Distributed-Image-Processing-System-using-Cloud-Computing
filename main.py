@@ -4,6 +4,7 @@ import queue
 import cv2
 from mpi4py import MPI
 from fastapi import FastAPI, UploadFile, Form
+import ImageProcessingFunctions
 
 app = FastAPI()
 task_queue = queue.Queue()
@@ -30,10 +31,30 @@ class WorkerThread(threading.Thread):
         print("in process")
         img = cv2.imread(image, cv2.IMREAD_COLOR)
         if operation == 'edge_detection':
-            result = cv2.Canny(img, 100, 200)
+            result = ImageProcessingFunctions.edge_detection(img)
         elif operation == 'color_inversion':
-            result = cv2.bitwise_not(img)
-        # Add more operations as needed...
+            result = ImageProcessingFunctions.color_inversion(img)
+        elif operation == 'grayscale':
+            result = ImageProcessingFunctions.grayscale(img)
+        elif operation == 'threshold':
+            result = ImageProcessingFunctions.threshold(img)
+        elif operation == 'blur':
+            result = ImageProcessingFunctions.blur(img)
+        elif operation == 'dilate':
+            result = ImageProcessingFunctions.dilate(img)
+        elif operation == 'erode':
+            result = ImageProcessingFunctions.erode(img)
+        elif operation == 'resize':
+            result = ImageProcessingFunctions.resize(img)
+        elif operation == 'equalize_histogram':
+            result = ImageProcessingFunctions.equalize_histogram(img)
+        elif operation == 'find_contours':
+            result = ImageProcessingFunctions.find_contours(img)
+        elif operation == 'read_qr_code':
+            result = ImageProcessingFunctions.read_qr_code(img)
+        else:
+            result = None  # Operation not supported
+
         return result
 
     def send_result(self, result):
