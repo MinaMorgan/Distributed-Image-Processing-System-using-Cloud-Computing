@@ -30,7 +30,7 @@ class ImageProcessor(ctk.CTk):
 
     def load_background(self):
         # Load the background image
-        image_path = "Background.jpg"
+        image_path = "images/Background.jpg"
         original_image = Image.open(image_path)
         self.background_image = ImageTk.PhotoImage(original_image)
 
