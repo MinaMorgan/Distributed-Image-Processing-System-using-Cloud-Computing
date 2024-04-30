@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import uvicorn
 import threading
 import queue
@@ -63,7 +65,7 @@ class WorkerThread(threading.Thread):
 @app.post('/process')
 async def process(image: UploadFile = Form(...), text: str = Form(...), operation: str = Form(...)):
     if rank == 0:
-        image_path = '/home/ubuntu/Distributed-Image-Processing-System-using-Cloud-Computing/image.jpg'  # Set the appropriate path
+        image_path = '/home/ubuntu/Project/image.jpg'  # Set the appropriate path
         with open(image_path, 'wb') as f:
             f.write(await image.read())
         task_queue.put((image_path, operation))
