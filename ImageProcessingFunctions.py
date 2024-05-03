@@ -33,6 +33,20 @@ def erode(image):
     iterations=5
     return cv2.erode(image, kernel, iterations=iterations)
 
+def find_contours(image):
+    # Convert the image to grayscale if it's not already
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+
+    edges = cv2.Canny(gray, 30, 100)
+
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    contour_image = image.copy()
+
+    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 1)
+
+    return contour_image
+##########################################################
 def resize(image, width=None, height=None):
     if width is None and height is None:
         return image
@@ -54,20 +68,6 @@ def equalize_histogram(image):
     img_equalized = cv2.equalizeHist(gray_image)
     return img_equalized
 
-def find_contours(image):
-    # Convert the image to grayscale if it's not already
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
-
-    edges = cv2.Canny(gray, 30, 100)
-
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    contour_image = image.copy()
-
-    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 1)
-
-    return contour_image
-
 
 def read_qr_code(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -82,7 +82,10 @@ def read_qr_code(image):
         cv2.putText(image, data, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
     return image, decoded_data
-
+#############################################
 def PrintTest(l):
     l = "Hello"
     return l
+def Test(image):
+    print("HEEEEEERE")
+    return image
