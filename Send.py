@@ -88,7 +88,7 @@ class ImageProcessor(ctk.CTk):
             self.image_path.set("")          
 
     def send_request(self):
-        url = 'http://13.53.46.190:5000/process'
+        url = 'http://13.51.252.196:5000/process'
         
         image_path = self.image_path.get()
         text = self.text_entry.get()

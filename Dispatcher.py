@@ -23,10 +23,12 @@ def check_worker_status():
         for i in range(1, size):
             try:
                 # Send a test message to worker node
-                comm.send("PING", dest=i)
+                print("PING")
+                comm.send("PING", dest=i, tag=1)
                 # Wait for response within a timeout period
-                response = comm.recv(source=i, tag=1, status=MPI.Status())
+                response = comm.recv(source=i, tag=2, status=MPI.Status())
                 if response == "PONG":
+                    print("Responded Pong")
                     worker_status[i - 1] = 0  # Node is available
             except Exception as e:
                 worker_status[i - 1] = 1  # Node is unavailable
@@ -46,9 +48,9 @@ class WorkerThread(threading.Thread):
             task = self.task_queue.get()
             if task is None:
                 break
-            image_chunk, operation = task
+            image_chunk, operation, dest = task
             result = self.process_image(image_chunk, operation)
-            self.send_result(result)
+            self.send_result(result, dest)
 
     def process_image(self, image_chunk, operation):
         img = cv2.imdecode(np.frombuffer(image_chunk, np.uint8), cv2.IMREAD_COLOR)
@@ -80,8 +82,8 @@ class WorkerThread(threading.Thread):
 
         return result
 
-    def send_result(self, result):
-        comm.send(result, dest=0)
+    def send_result(self, result, dest):
+        comm.send(result, dest=dest, tag=3)
 
 @app.post('/process')
 async def process_image(image: UploadFile = Form(...), operation: str = Form(...)):
@@ -101,15 +103,17 @@ async def process_image(image: UploadFile = Form(...), operation: str = Form(...
             end_row = min(chunk_size * i, height)
             chunk = img[start_row:end_row, :, :]
             encoded_chunk = cv2.imencode(".jpg", chunk)[1].tobytes()
-            task_queue.put((encoded_chunk, operation))
+            task_queue.put((encoded_chunk, operation, i))
 
         # Process the last chunk on the dispatcher node
         last_chunk = img[chunk_size * (size - 1):, :, :]
         last_encoded_chunk = cv2.imencode(".jpg", last_chunk)[1].tobytes()
-        processed_last_chunk = WorkerThread.process_image(last_encoded_chunk, operation)
+        worker_thread = WorkerThread(task_queue)
+        processed_last_chunk = worker_thread.process_image(last_encoded_chunk, operation)
+        comm.send(processed_last_chunk, dest=0, tag=3)
 
         # Gather processed chunks from worker nodes
-        processed_chunks = [processed_last_chunk] + [comm.recv(source=i) for i in range(1, size)]
+        processed_chunks = [comm.recv(source=i, tag=3) for i in range(1, size)]
 
         # Stitch the processed chunks
         processed_image = np.vstack(processed_chunks)

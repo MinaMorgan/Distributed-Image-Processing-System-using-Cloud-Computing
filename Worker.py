@@ -39,17 +39,19 @@ def process_image_chunk(chunk, operation):
     return result
 
 def worker():
+    print("RUNNING")
     while True:
         try:
             task, status = comm.recv(source=0, tag=MPI.ANY_TAG, status=MPI.Status())
 
             if status.Get_tag() == 1:  # Health check message (Ping-Pong)
-                comm.send("PONG", dest=0, tag=1)
+                print("PONG")
+                comm.send("PONG", dest=0, tag=2)
                 
             elif status.Get_tag() == 0:
                 image_chunk, operation = task
                 processed_chunk = process_image_chunk(image_chunk, operation)
-                comm.send(processed_chunk, dest=0, tag=0)
+                comm.send(processed_chunk, dest=0, tag=3)
         except Exception as e:
             print("Error:", e)
 
