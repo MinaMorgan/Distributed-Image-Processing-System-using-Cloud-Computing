@@ -56,7 +56,7 @@ class ImageProcessor(ctk.CTk):
         self.text_label.place(x=220, y=120)
 
         # Combobox for selecting operations
-        self.operation_combobox = ctk.CTkComboBox(self, width=140, values=["edge_detection", "color_inversion"])
+        self.operation_combobox = ctk.CTkComboBox(self, width=140, values=["edge_detection", "color_inversion", "grayscale", "threshold", "blur", "dilate", "erode", "resize", "equalize_histogram", "find_contours", "read_qr_code"])
         self.operation_combobox.set("")  # Set the empty string as the default selected value
         self.operation_combobox.place(x=280, y=120)
 
@@ -88,7 +88,7 @@ class ImageProcessor(ctk.CTk):
             self.image_path.set("")          
 
     def send_request(self):
-        url = 'http://16.16.195.190:5000/process'
+        url = 'http://13.53.46.190:5000/process'
         
         image_path = self.image_path.get()
         text = self.text_entry.get()

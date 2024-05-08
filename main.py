@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import uvicorn
 import threading
 import queue
