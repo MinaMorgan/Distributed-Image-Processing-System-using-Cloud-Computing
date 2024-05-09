@@ -5,17 +5,50 @@ from PIL import Image, ImageTk
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import time
+import uuid
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
+# def plot_image(data):
+#     image_array = np.array(data)
+#     plt.figure()
+#     plt.imshow(image_array, cmap='gray', interpolation='nearest')
+#     plt.title("Result")
+#     plt.axis('off')
+#     plt.show()
+
+def save_image(data, filename_prefix="image"):
+    # Generate a unique filename based on current timestamp
+    timestamp = int(time.time())
+    filename = f"{filename_prefix}_{timestamp}.jpg"
+    # Convert the data array to unsigned integer 8-bit
+    image_array = np.array(data, dtype=np.uint8)
+    # Create PIL Image object
+    image = Image.fromarray(image_array)
+    # Save the image to file
+    image.save(filename)
+    messagebox.showinfo("Save Successful", f"Image saved as {filename}")
+    return filename  # Return the filename for reference
+
+def open_image(filename):
+    # Open the image using the default image viewer
+    image = Image.open(filename)
+    image.show()
+
 def plot_image(data):
-    image_array = np.array(data)
-    plt.figure()
-    plt.imshow(image_array, cmap='gray', interpolation='nearest')
-    plt.title("Result")
-    plt.axis('off')
-    plt.show()
+    # Generate a unique filename using UUID
+    unique_filename = str(uuid.uuid4()) + ".jpg"
+    
+    # Check if the filename already exists
+    while os.path.exists(unique_filename):
+        unique_filename = str(uuid.uuid4()) + ".jpg"
+    
+    # Save the image with the unique filename
+    filename = save_image(data, unique_filename)
+    #open_image(filename)
+
 
 class ImageProcessor(ctk.CTk):
     def __init__(self):
@@ -79,33 +112,43 @@ class ImageProcessor(ctk.CTk):
             ('BMP', '*.bmp'),
         ]
         
-        filename = filedialog.askopenfilename(filetypes=file_types)
+        filenames = filedialog.askopenfilenames(filetypes=file_types)
         
-        if filename:
-            print("Selected file:", filename)
-            self.image_path.set(filename)
+        if filenames:
+            print("Selected files:", filenames)
+            # Convert tuple of filenames to a single string separated by semicolons
+            self.image_path.set(";".join(filenames))
         else:
-            self.image_path.set("")          
+            self.image_path.set("")    
+    
 
     def send_request(self):
-        url = 'http://13.51.252.196:5000/process'
+        url = 'http://127.0.0.1:5000/process'
         
-        image_path = self.image_path.get()
-        text = self.text_entry.get()
-        operation = self.operation_combobox.get()
-        
-        try:
-            files = {'image': open(image_path, 'rb')}
-            data = {
-                'text': text,
-                'operation': operation
-            }
-            response = requests.post(url, files=files, data=data)
-            #print(response.json())
-            img=response.json()
-            plot_image(img['result'])
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to send request: {e}")
+        image_paths = self.image_path.get().split(";")
+        for image_path in image_paths:
+            try:
+                files = {'images': open(image_path, 'rb')}
+                data = {
+                    'text': self.text_entry.get(),
+                    'operation': self.operation_combobox.get()
+                }
+                #print("Sending files:", files) 
+                #print("Sending data:", data) 
+                response = requests.post(url, files=files, data=data)
+                #print("Received response:", response.json()) 
+                json_response = response.json()
+                if 'results' in json_response:
+                    results = json_response['results']
+                    for result in results:
+                        plot_image(result)
+                else:
+                    messagebox.showerror("Error", "No 'results' found in the response.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to send request: {e}")
+
+
+
     
     def update_file_label(self, *args):
         self.file_label.configure(text=os.path.basename(self.image_path.get()))

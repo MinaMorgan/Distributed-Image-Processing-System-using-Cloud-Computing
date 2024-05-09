@@ -3,7 +3,6 @@ import subprocess
 from fastapi import FastAPI
 from queue import Queue
 import tempfile
-import os
 
 app = FastAPI()
 result_queue = Queue()
@@ -34,4 +33,4 @@ async def receive_image_and_operation(image: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=5000)
+    uvicorn.run(app, host='127.0.0.1', port=5001)
