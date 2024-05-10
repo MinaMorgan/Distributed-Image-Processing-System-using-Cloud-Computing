@@ -123,7 +123,7 @@ class ImageProcessor(ctk.CTk):
     
 
     def send_request(self):
-        url = 'http://127.0.0.1:5000/process'
+        url = 'http://16.170.213.68:5000/process'
         
         image_paths = self.image_path.get().split(";")
         for image_path in image_paths:

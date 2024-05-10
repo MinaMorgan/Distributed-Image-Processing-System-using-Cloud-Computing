@@ -1,4 +1,5 @@
 import uvicorn
+import json
 import threading
 import queue
 import cv2
@@ -38,14 +39,30 @@ class WorkerThread(threading.Thread):
         img1 = img[:, :width//2]
         img2 = img[:, width//2:]
         
-        vm1_url = "http://127.0.0.1:5000/receive_result"
-        vm2_url = "http://172.31.39.168:5000/receive_result"
+        vm1_url = "http://172.31.40.124:5000/receive_result"
+        vm2_url = "http://172.31.47.6:5000/receive_result"        
         
         result_vm1 = requests.post(vm1_url, json={"image": img1.tolist(), "operation": operation})
-        result_vm2 = requests.post(vm2_url, json={"image": img2.tolist(), "operation": operation})
+        result_vm2 = requests.post(vm2_url, json={"image": img2.tolist(), "operation": operation})  
         
-        print("Finished and returning to User")
-        return result_vm1, result_vm2
+        if result_vm1.status_code == 200 and result_vm2.status_code == 200:
+            json_vm1 = result_vm1.json()
+            json_vm2 = result_vm2.json()
+            # Concatenate the results vertically using numpy
+            concatenated_result = np.concatenate((json_vm1, json_vm2), axis=1)
+            concatenated_result_list = concatenated_result.tolist()
+
+            # Assign concatenated result back to result_vm1.json()
+            result_vm1._content = json.dumps(concatenated_result_list).encode('utf-8')
+            
+            print("Finished and returning to User")
+            
+            return result_vm1
+        
+        else:
+            print("Failed to receive valid responses from one or both servers.")
+            return None
+
 
     def send_result(self, result):
         comm.send(result, dest=0)
@@ -59,7 +76,7 @@ async def process(images: List[UploadFile] = Form(...), text: str = Form(...), o
     if rank == 0:
         image_paths = []
         for image in images:
-            image_path = f'images/{image.filename}'
+            image_path = f'/home/ubuntu/Distributed-Image-Processing-System-using-Cloud-Computing/{image.filename}'
             image_paths.append(image_path)
             with open(image_path, 'wb') as f:
                 f.write(await image.read())
