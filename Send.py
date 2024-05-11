@@ -3,11 +3,10 @@ import customtkinter as ctk
 from tkinter import Canvas, filedialog, messagebox
 from PIL import Image, ImageTk
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 import time
 import uuid
-
+import threading
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
@@ -18,19 +17,20 @@ ctk.set_default_color_theme("blue")
 #     plt.title("Result")
 #     plt.axis('off')
 #     plt.show()
+def show_info_message_box(message):
+    def show_message():
+        messagebox.showinfo("Info", message)
+    info_thread = threading.Thread(target=show_message)
+    info_thread.start()
 
 def save_image(data, filename_prefix="image"):
-    # Generate a unique filename based on current timestamp
     timestamp = int(time.time())
     filename = f"{filename_prefix}_{timestamp}.jpg"
-    # Convert the data array to unsigned integer 8-bit
     image_array = np.array(data, dtype=np.uint8)
-    # Create PIL Image object
     image = Image.fromarray(image_array)
-    # Save the image to file
     image.save(filename)
-    messagebox.showinfo("Save Successful", f"Image saved as {filename}")
-    return filename  # Return the filename for reference
+    show_info_message_box(f"Image saved as {filename}")
+    return filename
 
 def open_image(filename):
     # Open the image using the default image viewer
@@ -123,7 +123,7 @@ class ImageProcessor(ctk.CTk):
     
 
     def send_request(self):
-        url = 'http://16.170.213.68:5000/process'
+        url = 'http://127.0.0.1:5000/process'  # PUT PUBLIC IP <-------------------
         
         image_paths = self.image_path.get().split(";")
         for image_path in image_paths:
