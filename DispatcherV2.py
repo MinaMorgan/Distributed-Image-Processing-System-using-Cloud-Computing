@@ -109,7 +109,7 @@ async def process(images: List[UploadFile] = Form(...), text: str = Form(...), o
     if rank == 0:
         image_paths = []
         for image in images:
-            image_path = f'images/{image.filename}'
+            image_path = f'/home/ubuntu/Distributed-Image-Processing-System-using-Cloud-Computing/{image.filename}'
             image_paths.append(image_path)
             with open(image_path, 'wb') as f:
                 f.write(await image.read())
