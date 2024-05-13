@@ -19,18 +19,35 @@ def threshold(image):
     _, binary_image = cv2.threshold(image, threshold_value, max_value, threshold_type)
     return binary_image
 
-def blur(image):
-    kernel_size=(5, 5)
+def blur(image, kernel_size=None):
+    if kernel_size is None:
+        kernel_size = (5, 5)
+    elif isinstance(kernel_size, int):
+        if kernel_size %2 == 0:
+            kernel_size = kernel_size-1
+        kernel_size = (kernel_size, kernel_size)
     return cv2.GaussianBlur(image, kernel_size, 0)
 
-def dilate(image):
-    kernel = np.ones((10, 10), np.uint8)
-    iterations=5
+def dilate(image, kernel_size=None):
+    if kernel_size is None:
+        kernel_size = (5, 5)
+    elif isinstance(kernel_size, int):
+        if kernel_size %2 == 0:
+            kernel_size = kernel_size-1
+        kernel_size = (kernel_size, kernel_size)
+    kernel = np.ones(kernel_size, np.uint8)
+    iterations = 2
     return cv2.dilate(image, kernel, iterations=iterations)
 
-def erode(image):
-    kernel = np.ones((10, 10), np.uint8)
-    iterations=5
+def erode(image, kernel_size=None):
+    if kernel_size is None:
+        kernel_size = (5, 5)
+    elif isinstance(kernel_size, int):
+        if kernel_size %2 == 0:
+            kernel_size = kernel_size-1
+        kernel_size = (kernel_size, kernel_size)
+    kernel = np.ones(kernel_size, np.uint8)
+    iterations = 2
     return cv2.erode(image, kernel, iterations=iterations)
 
 def find_contours(image):
@@ -79,9 +96,30 @@ def read_qr_code(image):
         cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
         data = qr_code.data.decode("utf-8")
         decoded_data.append(data)
-        cv2.putText(image, data, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        
+        # Calculate the font scale based on the length of the decoded data
+        font_scale = min(1, 1000 / len(data))  # Adjust 1000 as needed based on your image size
+        
+        # Calculate the thickness of the text
+        thickness = max(1, int(font_scale))
+        
+        # Get the size of the text
+        (text_width, text_height), _ = cv2.getTextSize(data, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)
+        
+        # Calculate the position to place the text
+        text_x = max(x, 0)
+        text_y = y + h + text_height + 10  # Adjust 10 as needed
+        
+        # Ensure text stays within image boundaries
+        if text_x + text_width > image.shape[1]:
+            text_x = image.shape[1] - text_width - 10  # Adjust 10 as needed
+        
+        # Draw the text on the image
+        cv2.putText(image, data, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 255, 0), thickness)
 
     return image, decoded_data
+
+
 #############################################
 def PrintTest(l):
     l = "Hello"

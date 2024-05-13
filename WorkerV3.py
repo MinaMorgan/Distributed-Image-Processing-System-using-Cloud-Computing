@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from mpi4py import MPI
 import ImageProcessingFunctions
-import json
+
 
 # Initialization MPI
 comm = MPI.COMM_WORLD
@@ -11,7 +11,28 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 result_queue = Queue()
 
-def process_image(img, operation):
+def process_image(img, operation, text):
+    if operation == 'read_qr_code':
+        if rank ==0:
+            processed_chunk = ImageProcessingFunctions.read_qr_code(img)
+            return processed_chunk
+        else:
+            return
+    elif operation == 'resize':
+        if rank ==0:
+            if text is None:
+                processed_chunk = ImageProcessingFunctions.resize(img)
+            else:
+                processed_chunk = ImageProcessingFunctions.resize(img,int(text),int(text))
+            return processed_chunk
+        else:
+            return
+    elif operation == 'equalize_histogram':
+        if rank ==0:
+            processed_chunk = ImageProcessingFunctions.equalize_histogram(img)
+            return processed_chunk
+        else:
+            return
     height, width = img.shape[:2]
     # Broadcast image dimensions to all MPI Threads
     height, width = comm.bcast((height, width), root=0)
@@ -47,19 +68,22 @@ def process_image(img, operation):
     elif operation == 'threshold':
         processed_chunk = ImageProcessingFunctions.threshold(chunk)
     elif operation == 'blur':
-        processed_chunk = ImageProcessingFunctions.blur(chunk)
+        if text is None:
+            processed_chunk = ImageProcessingFunctions.blur(chunk,text)
+        else:
+            processed_chunk = ImageProcessingFunctions.blur(chunk,int(text))
     elif operation == 'dilate':
-        processed_chunk = ImageProcessingFunctions.dilate(chunk)
+        if text is None:
+            processed_chunk = ImageProcessingFunctions.dilate(chunk,text)
+        else:
+            processed_chunk = ImageProcessingFunctions.dilate(chunk,int(text))
     elif operation == 'erode':
-        processed_chunk = ImageProcessingFunctions.erode(chunk)
-    elif operation == 'resize':
-        processed_chunk = ImageProcessingFunctions.resize(chunk)
-    elif operation == 'equalize_histogram':
-        processed_chunk = ImageProcessingFunctions.equalize_histogram(chunk)
+        if text is None:
+            processed_chunk = ImageProcessingFunctions.erode(chunk,text)
+        else:
+            processed_chunk = ImageProcessingFunctions.erode(chunk,int(text))
     elif operation == 'find_contours':
         processed_chunk = ImageProcessingFunctions.find_contours(chunk)
-    elif operation == 'read_qr_code':
-        processed_chunk = ImageProcessingFunctions.read_qr_code(chunk)
     else:
         processed_chunk = None  # Operation not supported
     # Send chunks to rank 0
@@ -83,11 +107,22 @@ def process_image(img, operation):
 if __name__ == "__main__":
     # Extract image and operation from command-line arguments
     received_image = np.load(sys.argv[1])
+    #print(received_image)
     operation = sys.argv[2]
-
+    if len(sys.argv) == 4:
+        text = sys.argv[3]
+    else:
+        text = None
     # Perform image processing using MPI
     print(f"Processing in workerV3 and my rank: {rank}")
-    processed_result = process_image(received_image, operation)
+    processed_result = process_image(received_image, operation,text)
     # Save the processed result into a file
     if rank ==0:
-        np.save('processed_result.npy', processed_result)
+        if operation == "read_qr_code":
+                    # Save the decoded data to a text file
+            with open("decoded_data.txt", "w") as file:
+                for data in processed_result[1]:
+                    file.write(data + "\n")
+            np.save('processed_result.npy', processed_result[0])
+        else:
+            np.save('processed_result.npy', processed_result)

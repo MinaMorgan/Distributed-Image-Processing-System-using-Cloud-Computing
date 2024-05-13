@@ -7,8 +7,28 @@ import numpy as np
 import time
 import uuid
 import threading
+
+
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
+
+
+def show_decoded_data(title, message):
+    # Create a top-level window
+    window = ctk.CTkToplevel()
+    window.title(title)
+
+    # Create a text widget to display the message
+    text_widget = ctk.CTkTextbox(window, wrap='word', height=10, width=40)
+    text_widget.insert('1.0', message)
+    text_widget.pack(expand=True, fill='both')
+
+    # Resize the window to fit the content
+    window.update_idletasks()  # Update the window to calculate its size
+    width = window.winfo_reqwidth() + 20  # Add some padding
+    height = window.winfo_reqheight() + 20  # Add some padding
+    window.geometry(f"{width}x{height}")
+
 
 # def plot_image(data):
 #     image_array = np.array(data)
@@ -83,7 +103,7 @@ class ImageProcessor(ctk.CTk):
         # Text entry
         self.text_entry = ctk.CTkEntry(self, width=170)
         self.text_entry.place(x=250, y=80)
-        
+            
         # Label for the text entry
         self.text_label = ctk.CTkLabel(self, text="Operation:")
         self.text_label.place(x=220, y=120)
@@ -141,7 +161,12 @@ class ImageProcessor(ctk.CTk):
                 if 'results' in json_response:
                     results = json_response['results']
                     for result in results:
-                        plot_image(result)
+                        if data['operation'] == 'read_qr_code':
+                            plot_image(result[0])
+                            decoded_data = result[1]
+                            show_decoded_data("Decoded Data", decoded_data)
+                        else:
+                            plot_image(result)
                 else:
                     messagebox.showerror("Error", "No 'results' found in the response.")
             except Exception as e:
