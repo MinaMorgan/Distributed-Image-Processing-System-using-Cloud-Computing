@@ -38,7 +38,7 @@ async def send_ping_to_dispatcher(vm_id: str):
 async def run_ping_thread():
     while running:
         print("Sending ping...")
-        await send_ping_to_dispatcher("172.31.40.124")#<---------------- Private IP
+        await send_ping_to_dispatcher("172.31.46.231")#<---------------- Private IP
         await asyncio.sleep(5)
 
 @app.post('/receive_result')
@@ -57,9 +57,9 @@ async def receive_result_handler(image: dict):
             np.save(temp_file, received_image)
             temp_file_path = temp_file.name
         if text is None:
-            subprocess.run(['mpiexec','-np', '2', 'python', 'WorkerV3.py', temp_file_path, operation])
+            subprocess.run(['mpirun', '--hostfile', 'my_hostfile.txt', '-np', '2', 'python3', 'WorkerV3.py', temp_file_path, operation])
         else:
-            subprocess.run(['mpiexec','-np', '2', 'python', 'WorkerV3.py', temp_file_path, operation, text])
+            subprocess.run(['mpirun', '--hostfile', 'my_hostfile.txt', '-np', '2', 'python3', 'WorkerV3.py', temp_file_path, operation, text])
         print("MPI process completed")
     except Exception as e:
         print("Error executing MPI process:", e)
