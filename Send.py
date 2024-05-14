@@ -37,19 +37,12 @@ def show_decoded_data(title, message):
 #     plt.title("Result")
 #     plt.axis('off')
 #     plt.show()
-def show_info_message_box(message):
-    def show_message():
-        messagebox.showinfo("Info", message)
-    info_thread = threading.Thread(target=show_message)
-    info_thread.start()
-
 def save_image(data, filename_prefix="image"):
     timestamp = int(time.time())
     filename = f"{filename_prefix}_{timestamp}.jpg"
     image_array = np.array(data, dtype=np.uint8)
     image = Image.fromarray(image_array)
     image.save(filename)
-    show_info_message_box(f"Image saved as {filename}")
     return filename
 
 def open_image(filename):
@@ -97,16 +90,17 @@ class ImageProcessor(ctk.CTk):
         self.select_image_button.place(x=220, y=40)
 
         # Label for the text entry
-        self.text_label = ctk.CTkLabel(self, text="Text:")
+        self.text_label = ctk.CTkLabel(self, text="Parameter:")
         self.text_label.place(x=220, y=80)
         
         # Text entry
-        self.text_entry = ctk.CTkEntry(self, width=170)
-        self.text_entry.place(x=250, y=80)
+        self.text_entry = ctk.CTkEntry(self, width=135)
+        self.text_entry.place(x=285, y=80)
             
         # Label for the text entry
         self.text_label = ctk.CTkLabel(self, text="Operation:")
         self.text_label.place(x=220, y=120)
+        
 
         # Combobox for selecting operations
         self.operation_combobox = ctk.CTkComboBox(self, width=140, values=["edge_detection", "color_inversion", "grayscale", "threshold", "blur", "dilate", "erode", "resize", "equalize_histogram", "find_contours", "read_qr_code"])
@@ -138,42 +132,71 @@ class ImageProcessor(ctk.CTk):
             print("Selected files:", filenames)
             # Convert tuple of filenames to a single string separated by semicolons
             self.image_path.set(";".join(filenames))
+            self.total_images = len(filenames)  # Set the total number of images selected
+            self.show_progress_bar()
         else:
             self.image_path.set("")    
     
 
+    
     def send_request(self):
-        url = 'http://13.53.135.119:5000/process'  # PUT PUBLIC IP <-------------------
-        
-        image_paths = self.image_path.get().split(";")
-        for image_path in image_paths:
-            try:
-                files = {'images': open(image_path, 'rb')}
-                data = {
-                    'text': self.text_entry.get(),
-                    'operation': self.operation_combobox.get()
-                }
-                #print("Sending files:", files) 
-                #print("Sending data:", data) 
-                response = requests.post(url, files=files, data=data)
-                #print("Received response:", response.json()) 
-                json_response = response.json()
-                if 'results' in json_response:
-                    results = json_response['results']
-                    for result in results:
-                        if data['operation'] == 'read_qr_code':
-                            plot_image(result[0])
-                            decoded_data = result[1]
-                            show_decoded_data("Decoded Data", decoded_data)
+        def request_thread():
+            url = 'http://127.0.0.1:5000/process'  # PUT PUBLIC IP <-------------------
+            
+            image_paths = self.image_path.get().split(";")
+            self.label.configure(text="Processing")
+            for idx, image_path in enumerate(image_paths):
+                try:
+                    with open(image_path, 'rb') as image_file:
+                        files = {'images': image_file}
+                        data = {
+                            'text': self.text_entry.get(),
+                            'operation': self.operation_combobox.get()
+                        }
+                        response = requests.post(url, files=files, data=data)
+                        if response.status_code == 200:
+                            self.update_progress(idx+1)
+                            json_response = response.json()
+                        if 'results' in json_response:
+                            results = json_response['results']
+                            for result in results:
+                                if data['operation'] == 'read_qr_code':
+                                    plot_image(result[0])
+                                    decoded_data = result[1]
+                                    show_decoded_data("Decoded Data", decoded_data)
+                                else:
+                                    plot_image(result)
                         else:
-                            plot_image(result)
-                else:
-                    messagebox.showerror("Error", "No 'results' found in the response.")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to send request: {e}")
+                            messagebox.showerror("Error", "No 'results' found in the response.")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to send request: {e}")
 
+        # Start the request in a new thread
+        thread = threading.Thread(target=request_thread)
+        thread.start()
 
+    def show_progress_bar(self):
+        # Create a new top-level window
+        self.progress_window = ctk.CTkToplevel()
+        self.progress_window.title("Progress")
+        self.progress_window.geometry("300x100")  # Adjust size as needed
 
+        # Add a label to display the message above the progress bar
+        self.label = ctk.CTkLabel(self.progress_window, text="Ready to Process")
+        self.label.pack(pady=10)  # Add some padding vertically
+
+        # Progress Bar
+        self.progress_bar = ctk.CTkProgressBar(self.progress_window, width=200)
+        self.progress_bar.pack(pady=10)  # Add some padding vertically
+
+        # Initially set progress bar to 0
+        self.progress_bar.set(0)
+
+    def update_progress(self, current_index):
+        self.progress_value = current_index / self.total_images # Calculate progress as a percentage
+        self.progress_bar.set(self.progress_value)  # Update the progress bar
+        if current_index >= self.total_images:
+            self.label.configure(text="Task Done")
     
     def update_file_label(self, *args):
         self.file_label.configure(text=os.path.basename(self.image_path.get()))
