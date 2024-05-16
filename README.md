@@ -26,9 +26,13 @@ This project, *Image Processing Distributed System*, utilizes Amazon's AWS to ef
    ````shell
    cd Distributed-Image-Processing-System-using-Cloud-Computing
 
-3. Intialize VMs using the script provided in the document.
+3.	Run the Send.py script to start the application.
+4.	Select the image(s) that you want to process.
+5.	Choose the desired image processing operation(s) from the available options.
+- For some operations, text is used to specify the mask size (if needed).
+6.	Click on the "Send Request" button to initiate the processing.
+7.	Track Processing Progress
 
-4. Copy the files provided into the VM.
    
 ## Usage
 - Configure AWS credentials and access permissions.
