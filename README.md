@@ -26,20 +26,19 @@ This project, *Image Processing Distributed System*, utilizes Amazon's AWS to ef
    ````shell
    cd Distributed-Image-Processing-System-using-Cloud-Computing
 
-3.	Run the Send.py script to start the application.
-4.	Select the image(s) that you want to process.
-5.	Choose the desired image processing operation(s) from the available options.
-- For some operations, text is used to specify the mask size (if needed).
-6.	Click on the "Send Request" button to initiate the processing.
-7.	Track Processing Progress
+3. Install the following Libraries:
+   ````shell
+   pip install requests customtkinter Pillow numpy
 
-   
 ## Usage
-- Configure AWS credentials and access permissions.
-- Run the system deployment script to set up the cloud environment.
-- Upload images through the user-friendly GUI.
-- Track processing progress and monitor system status.
-- Refer to the documentation for detailed usage instructions.
+
+1.	Run the Send.py script to start the application.
+2.	Select the image(s) that you want to process.
+3.	Choose the desired image processing operation(s) from the available options.
+   - For some operations, text is used to specify the mask size (if needed).
+4.	Click on the "Send Request" button to initiate the processing.
+5.	Track Processing Progress
+
 ## Contributing
 Contributions to this project are welcome. If you have any ideas, suggestions, or bug fixes, please open an issue or submit a pull request.
 When contributing, please ensure that your code follows the existing coding style and conventions. Add appropriate tests for any new features or bug fixes.
