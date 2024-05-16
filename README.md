@@ -47,6 +47,6 @@ When contributing, please ensure that your code follows the existing coding styl
 - Appreciation to the open-source community for valuable resources and support.
 
 ## Contact
-For any questions or inquiries, please contact [rafikghaly2002@gmail.com](mailto:your-email@example.com).
+For any questions or inquiries, please contact [rafikghaly2002@gmail.com](mailto:your-email@example.com) or [minammorgan21@gmail.com](mailto:your-email@example.com).
 
 
